@@ -1,0 +1,15 @@
+{
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "./out"
+        }
+    ],
+    "require": {
+        "grpc/hello-sdk":"dev-master"
+    },
+    "autoload": {
+    }
+}
