@@ -4,7 +4,7 @@ require __DIR__.'/vendor/autoload.php';
 use Helloworld\HelloRequest;
 use Helloworld\HelloReply;
 
-class GreeterService extends Helloworld\AbstractGreeterServer
+class GreeterService extends Helloworld\AbstractGreeterService
 {
     public function SayHello(HelloRequest $request, &$code, &$msg) : HelloReply
     {
@@ -17,6 +17,6 @@ class GreeterService extends Helloworld\AbstractGreeterServer
 }
 
 $s = new Lv\Grpc\SwooleServer('127.0.0.1', 8080);
-$s->add(new GreeterService);
+$s->addService(new GreeterService);
 
 $s->run();
