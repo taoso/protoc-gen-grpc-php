@@ -191,7 +191,7 @@ func (g *Generator) generateInterface(file *descriptor.FileDescriptorProto, serv
 		}
 
 		signature := fmt.Sprintf(
-			"function %s(%s $request, &$code, &$msg) : %s;",
+			"function %s(%s $request, &$status, &$msg) : %s;",
 			method.GetName(),
 			getNameSpace(method.GetInputType()),
 			getNameSpace(method.GetOutputType()))
@@ -232,7 +232,7 @@ func (g *Generator) generateClient(file *descriptor.FileDescriptorProto, service
 		replyType := getNameSpace(method.GetOutputType())
 		methodName := method.GetName()
 		signature := fmt.Sprintf(
-			"public function %s(%s $request, &$code, &$msg) : %s",
+			"public function %s(%s $request, &$status, &$msg) : %s",
 			method.GetName(),
 			getNameSpace(method.GetInputType()),
 			replyType)
@@ -241,7 +241,7 @@ func (g *Generator) generateClient(file *descriptor.FileDescriptorProto, service
 		g.In()
 		g.P("$reply = new " + replyType + "();")
 		g.P()
-		g.P("list($code, $msg) = $this->send(\"/" + file.GetPackage() + "." + serviceName + "/" + methodName + "\", $request, $reply);")
+		g.P("list($status, $msg) = $this->send(\"/" + file.GetPackage() + "." + serviceName + "/" + methodName + "\", $request, $reply);")
 		g.P()
 		g.P("return $reply;")
 		g.Out()
@@ -274,14 +274,14 @@ func (g *Generator) generateServer(file *descriptor.FileDescriptorProto, service
 	g.P("];")
 	g.P()
 	for _, method := range service.GetMethod() {
-		g.P("final public function do" + method.GetName() + "($data, &$code, &$msg)")
+		g.P("final public function do" + method.GetName() + "($data, &$status, &$msg)")
 		g.P("{")
 		g.In()
 		replyType := getNameSpace(method.GetInputType())
 		g.P("$request = new " + replyType + ";")
 		g.P("$request->mergeFromString($data);")
 		g.P()
-		g.P("return $this->" + method.GetName() + "($request, $code, $msg);")
+		g.P("return $this->" + method.GetName() + "($request, $status, $msg);")
 		g.Out()
 		g.P("}")
 	}
