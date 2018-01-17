@@ -8,8 +8,6 @@
         }
     ],
     "require": {
-        "grpc/hello-sdk":"dev-master"
-    },
-    "autoload": {
+        "lvht/hello-sdk": "dev-master"
     }
 }

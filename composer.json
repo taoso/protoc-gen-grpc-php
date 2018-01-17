@@ -1,0 +1,19 @@
+{
+    "name": "lvht/grpc",
+    "authors": [
+        {
+            "name": "吕海涛",
+            "email": "i@lvht.net"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Lv\\Grpc\\": "./php/src"
+        }
+    },
+    "require": {
+        "php": "^7",
+        "ext-curl": "*",
+        "google/protobuf": "^3.5"
+    }
+}

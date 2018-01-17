@@ -55,7 +55,7 @@ func New() *Generator {
 	g.clientTrait = "\\Lv\\Grpc\\CurlClientTrait"
 	g.composerName = ""
 	g.requireName = "lvht/grpc"
-	g.requireVersion = "^1.0"
+	g.requireVersion = "dev-master"
 
 	return g
 }
@@ -120,18 +120,6 @@ func (g *Generator) Out() {
 }
 
 func (g *Generator) generateComposer() {
-	if g.clientTrait == "" {
-		g.Fail("no client_trait")
-	}
-
-	if g.requireName == "" {
-		g.Fail("no require_name")
-	}
-
-	if g.requireVersion == "" {
-		g.Fail("no require_version")
-	}
-
 	if g.composerName == "" {
 		g.Fail("no client_name")
 	}
@@ -306,12 +294,6 @@ func (g *Generator) CommandLineParameters(parameter string) {
 		switch k {
 		case "composer_name":
 			g.composerName = v
-		case "client_trait":
-			g.clientTrait = v
-		case "require_name":
-			g.requireName = v
-		case "require_version":
-			g.requireVersion = v
 		}
 	}
 }
