@@ -19,8 +19,13 @@ trait UnaryGrpc
             /** @var Message $message */
             $message = $service($session, $data);
             if ($status === Status::OK) {
-                $data = $message->serializeToString();
-                $session->setMetadata('content-type', 'application/grpc+proto');
+                $content_type = $session->getMetadata('content-type');
+                if ($content_type === 'application/grpc+json') {
+                    $data = $message->serializeToJsonString();
+                } else {
+                    $data = $message->serializeToString();
+                }
+                $session->setMetadata('content-type', $content_type);
                 $session->end(Status::OK, pack('CN', 0, strlen($data)).$data);
             } else {
                 $session->end($status);

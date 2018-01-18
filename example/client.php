@@ -5,6 +5,7 @@ $client = new Helloworld\GreeterClient('127.0.0.1:8080');
 
 $context = $client->newContext();
 $context->setMetadata('a', 1);
+$context->setMetadata('content-type', 'application/grpc+json');
 $request = new Helloworld\HelloRequest;
 $request->setName("Haitao Lv");
 

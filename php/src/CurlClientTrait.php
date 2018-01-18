@@ -56,15 +56,23 @@ trait CurlClientTrait
         $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
 
-        $data = $request->serializeToString();
+        if ($context->getMetadata('content-type') === 'application/grpc+json') {
+            $data = $request->serializeToJsonString();
+        } else {
+            $data = $request->serializeToString();
+        }
         $data = pack('CN', 0, strlen($data)).$data;
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
 
         $header_lines = [];
+
+        if (!$context->getMetadata('content-type')) {
+            $header_lines[] = 'Content-Type: application/grpc+proto';
+        }
+
         foreach ($context->getAndClearAllMetadata() as $name => $value) {
             $header_lines[] = "$name: $value";
         }
-        $header_lines[] = 'Content-Type: application/grpc+proto';
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);
 
         $data = curl_exec($this->curl);
@@ -75,7 +83,11 @@ trait CurlClientTrait
 
         if (isset($this->reply_metadata['grpc-status'])) {
             if($this->reply_metadata['grpc-status'] == Status::OK) {
-                $reply->mergeFromString(substr($data, 5));
+                if ($context->getMetadata('content-type') === 'application/grpc+json') {
+                    $reply->mergeFromJsonString(substr($data, 5));
+                } else {
+                    $reply->mergeFromString(substr($data, 5));
+                }
             }
 
             $status = (int) $this->reply_metadata['grpc-status'];
