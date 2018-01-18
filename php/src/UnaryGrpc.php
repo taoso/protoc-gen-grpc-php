@@ -17,7 +17,7 @@ trait UnaryGrpc
             $service = $this->getService($session->getPath());
 
             /** @var Message $message */
-            $message = $service($data, $status, $msg);
+            $message = $service($session, $data);
             if ($status === Status::OK) {
                 $data = $message->serializeToString();
                 $session->setMetadata('content-type', 'application/grpc+proto');

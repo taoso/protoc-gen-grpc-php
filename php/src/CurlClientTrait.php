@@ -9,7 +9,6 @@ trait CurlClientTrait
 
     private $authority;
     private $curl;
-    private $request_metadata = [];
     private $reply_metadata = [];
 
     public function __construct(string $authority = '')
@@ -19,7 +18,6 @@ trait CurlClientTrait
         curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
         curl_setopt($this->curl, CURLOPT_POST, 1);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1 );
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, ['Content-Type: application/grpc+proto']); 
 
         curl_setopt($this->curl, CURLOPT_NOSIGNAL, 1);
         curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT_MS, 10);
@@ -57,40 +55,9 @@ trait CurlClientTrait
         return $this;
     }
 
-    public function setAuthority(string $authority) : self
+    private function send(string $path, Context $context, Message $request, Message $reply)
     {
-        $this->authority = $authority;
-        return $this;
-    }
-
-    public function setMetadata($name, $value)
-    {
-        if (is_null($value)) {
-            unset($this->request_metadata[$value]);
-            return $this;
-        }
-
-        if ($this->isBinName($name)) {
-            $value = base64_encode($value);
-        }
-
-        $this->request_metadata[$name] = $value;
-        return $this;
-    }
-
-    public function getMetadata($name)
-    {
-        $value = $this->reply_metadata[$name] ?? null;
-        if ($value && $this->isBinName($name)) {
-            $value = base64_decode($value);
-        }
-
-        return $value;
-    }
-
-    private function send(string $path, Message $request, Message $reply)
-    {
-        $this->request_metadata = [];
+        $this->reply_metadata = [];
 
         $url = $this->authority.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
@@ -100,12 +67,17 @@ trait CurlClientTrait
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
 
         $header_lines = [];
-        foreach ($this->request_metadata as $name => $value) {
-            $header_lines[] = "$name : $value";
+        foreach ($context->getAndClearAllMetadata() as $name => $value) {
+            $header_lines[] = "$name: $value";
         }
+        $header_lines[] = 'Content-Type: application/grpc+proto';
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);
 
         $data = curl_exec($this->curl);
+
+        foreach ($this->reply_metadata as $name => $value) {
+            $context->setMetadata($name, $value);
+        }
 
         if (isset($this->reply_metadata['grpc-status'])) {
             if($this->reply_metadata['grpc-status'] == Status::OK) {
@@ -113,17 +85,33 @@ trait CurlClientTrait
             }
 
             $status = (int) $this->reply_metadata['grpc-status'];
-            $msg = Status::STATUS_TO_MSG[$status] ?? Status::UNKNOWN;
-        } else {
-            $status = -curl_errno($this->curl);
-            $msg = curl_error($this->curl);
-        }
+            $message = $this->reply_metadata['grpc-message']
+                ?? Status::STATUS_TO_MSG[$status] ?? Status::UNKNOWN;
 
-        return [$status, $msg];
+            $context->setStatus($status);
+            $context->setMessage($message);
+        } else {
+            $context->setStatus(Status::INTERNAL);
+        }
     }
 
     public function getMethods()
     {
         return [];
+    }
+
+    public function newContext() : Context
+    {
+        return new CurlContext;
+    }
+
+    public function getLastErrno()
+    {
+        return curl_errno($this->curl);
+    }
+
+    public function getLastError()
+    {
+        return curl_error($this->curl);
     }
 }

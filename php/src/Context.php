@@ -9,17 +9,38 @@ interface Context
     function setStatus(int $status);
 
     /**
-     * set a grpc metadata named by $name
+     * get grpc status
      */
-    function setMetadata($name);
+    function getStatus() : int;
 
     /**
-     * get a grpc metadata named by $name
+     * set grpc message
      */
-    function getMetadata($name);
+    function setMessage(string $message);
 
     /**
-     * get all grpc metadata
+     * get grpc message
      */
-    function getAllMetadata() : array;
+    function getMessage() : string;
+
+    /**
+     * get grpc metadata. if the name has '-bin', the value
+     * will be base64_decoded.
+     *
+     * @return string|null
+     */
+    function getMetadata(string $name);
+
+    /**
+     * set grpc metadata. if the name has '-bin', the value
+     * will be base64_encoded.
+     */
+    function setMetadata(string $name, string $value);
+
+    /**
+     * get and clear all grpc metadata
+     *
+     * FOR CLIENT ONLY!
+     */
+    function getAndClearAllMetadata() : array;
 }

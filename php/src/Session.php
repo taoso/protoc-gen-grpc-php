@@ -1,7 +1,7 @@
 <?php
 namespace Lv\Grpc;
 
-interface Session
+interface Session extends Context
 {
     /**
      * get http request path
@@ -15,18 +15,6 @@ interface Session
      * get http request body
      */
     function getBody();
-
-    /**
-     * get grpc metadata. if the name has '-bin', the value
-     * will be base64_decoded.
-     */
-    function getMetadata($name);
-
-    /**
-     * set grpc metadata. if the name has '-bin', the value
-     * will be base64_encoded.
-     */
-    function setMetadata(string $name, string $value);
 
     /**
      * set response to client

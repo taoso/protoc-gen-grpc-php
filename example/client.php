@@ -3,8 +3,11 @@ require __DIR__.'/vendor/autoload.php';
 
 $client = new Helloworld\GreeterClient('127.0.0.1:8080');
 
+$context = $client->newContext();
+$context->setMetadata('a', 1);
 $request = new Helloworld\HelloRequest;
 $request->setName("Haitao Lv");
 
-$reply = $client->SayHello($request, $code, $msg);
-var_dump([$code, $msg, $reply->getMessage()]);
+$reply = $client->SayHello($context, $request);
+var_dump([$context->getStatus(), $context->getMessage(), $reply->getMessage()]);
+var_dump($context->getMetadata('b'));

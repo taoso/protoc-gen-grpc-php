@@ -39,10 +39,10 @@ class SwooleSession implements Session
         return $this->request->rawcontent();
     }
 
-    public function getMetadata($name)
+    public function getMetadata(string $name)
     {
-        $value = $this->request->header($name);
-        if ($this->isBinName($name)) {
+        $value = $this->request->header[$name] ?? null;
+        if ($this->isBinName($name) && $value) {
             $value = base64_decode($value);
         }
 
@@ -58,6 +58,16 @@ class SwooleSession implements Session
         return $this->response->header($name, $value, 0);
     }
 
+    public function setStatus(int $status)
+    {
+        $this->setMetadata('grpc-status', $status);
+    }
+
+    public function setMessage(string $message)
+    {
+        $this->setMetadata('grpc-message', $message);
+    }
+
     public function end($status = null, string $body = null)
     {
         if ($this->is_http2) {
@@ -67,5 +77,20 @@ class SwooleSession implements Session
         }
 
         return $this->response->end($body);
+    }
+
+    public function getMessage() : string
+    {
+        throw new \RuntimeException('unsupport '.__METHOD__);
+    }
+
+    public function getStatus() : int
+    {
+        throw new \RuntimeException('unsupport '.__METHOD__);
+    }
+
+    public function getAndClearAllMetadata() : array
+    {
+        throw new \RuntimeException('unsupport '.__METHOD__);
     }
 }
