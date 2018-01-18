@@ -7,21 +7,37 @@ trait CurlClientTrait
 {
     use BinNameTrait;
 
-    private $authority;
+    private $host;
     private $curl;
     private $reply_metadata = [];
 
-    public function __construct(string $authority = '')
+    /**
+     * create a grpc service client
+     *
+     * @param $host server host, e.g. 127.0.0.1:1024
+     * @param $options client options, include:
+     *      - use_http1, indicate whether use http/1.1, default false
+     *      - connect_timeout_ms, connect timout, default 10ms
+     *      - timeout_ms, timout, default 30ms
+     */
+    public function __construct(string $host= '', array $options = [])
     {
-        $this->authority = $authority;
+        $this->host = $host;
         $this->curl = curl_init();
-        curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
+
+        $use_http1 = empty($options['use_http1']) ? false : true;
+        if (!$use_http1) {
+            curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
+        }
+
         curl_setopt($this->curl, CURLOPT_POST, 1);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1 );
 
+        $timeout_ms = (int)($options['timeout_ms'] ?? 30);
+        $connect_timeout_ms = (int)($options['connect_timeout_ms'] ?? 10);
         curl_setopt($this->curl, CURLOPT_NOSIGNAL, 1);
-        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT_MS, 10);
-        curl_setopt($this->curl, CURLOPT_TIMEOUT_MS, 30);
+        curl_setopt($this->curl, CURLOPT_TIMEOUT_MS, $timeout_ms);
+        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT_MS, $connect_timeout_ms);
 
         curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
             if (strpos($header_line, ':')) {
@@ -33,33 +49,11 @@ trait CurlClientTrait
         });
     }
 
-    public function useHttp1()
-    {
-        curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-    }
-
-    public function useHttp2()
-    {
-        curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
-    }
-
-    public function setTimeout(int $timeout_ms) : self
-    {
-        curl_setopt($this->curl, CURLOPT_TIMEOUT_MS, $timeout_ms);
-        return $this;
-    }
-
-    public function setConnectTimeout(int $timeout_ms) : self
-    {
-        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT_MS, $timeout_ms);
-        return $this;
-    }
-
     private function send(string $path, Context $context, Message $request, Message $reply)
     {
         $this->reply_metadata = [];
 
-        $url = $this->authority.$path;
+        $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
 
         $data = $request->serializeToString();
