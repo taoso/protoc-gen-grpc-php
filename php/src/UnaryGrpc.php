@@ -5,7 +5,7 @@ use Google\Protobuf\Internal\Message;
 
 trait UnaryGrpc
 {
-    private $path_service = [];
+    private $uri_method = [];
     private $not_found_service;
 
     private function doRequest(Session $session)
@@ -33,10 +33,10 @@ trait UnaryGrpc
         }
     }
 
-    private function getService($path)
+    private function getService(string $uri)
     {
-        if (isset($this->path_service[$path])) {
-            return $this->path_service[$path];
+        if (isset($this->uri_method[$uri])) {
+            return $this->uri_method[$uri];
         }
 
         if (!isset($this->not_found_service)) {
@@ -46,10 +46,10 @@ trait UnaryGrpc
         return $this->not_found_service;
     }
 
-    public function addService($service)
+    public function addService(Service $service)
     {
-        foreach ($service::PATH_METHOD as $path => $method) {
-            $this->path_service[$path] = [$service, $method];
+        foreach ($service->getMethods() as $uri => $method) {
+            $this->uri_method[$uri] = [$service, $method];
         }
     }
 }

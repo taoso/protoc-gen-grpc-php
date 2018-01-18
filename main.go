@@ -32,6 +32,8 @@ import (
 	plugin "github.com/golang/protobuf/protoc-gen-go/plugin"
 )
 
+// Generator is the type whose methods generate the output,
+// stored in the associated response structure.
 type Generator struct {
 	*bytes.Buffer
 
@@ -159,7 +161,7 @@ func (g *Generator) generateInterface(file *descriptor.FileDescriptorProto, serv
 
 	comments := extractComments(file)
 
-	g.P("interface " + service.GetName())
+	g.P("interface " + service.GetName() + " extends \\Lv\\Grpc\\Service")
 	g.P("{")
 	g.In()
 	path := fmt.Sprintf("6,%d", index) // 6 means service.
@@ -248,11 +250,13 @@ func (g *Generator) generateService(file *descriptor.FileDescriptorProto, servic
 	g.P()
 
 	serviceName := service.GetName()
-	g.P("abstract class Abstract" + serviceName + "Service implements " + serviceName)
+	g.P("trait " + serviceName + "ServiceTrait")
 	g.P("{")
 	g.In()
-	g.P("const SERVICE = \"" + file.GetPackage() + "." + serviceName + "\";")
-	g.P("const PATH_METHOD = [")
+	g.P("final public function getMethods()")
+	g.P("{")
+	g.In()
+	g.P("return [")
 	g.In()
 	for _, method := range service.GetMethod() {
 		methodName := method.GetName()
@@ -260,6 +264,8 @@ func (g *Generator) generateService(file *descriptor.FileDescriptorProto, servic
 	}
 	g.Out()
 	g.P("];")
+	g.Out()
+	g.P("}")
 	g.P()
 	for _, method := range service.GetMethod() {
 		g.P("final public function do" + method.GetName() + "($data, &$status, &$msg)")
@@ -353,7 +359,7 @@ func (g *Generator) GenerateAllFiles() {
 			g.Reset()
 			g.generateService(file, service, i)
 			g.Response.File = append(g.Response.File, &plugin.CodeGeneratorResponse_File{
-				Name:    proto.String(getFilePath(file.GetPackage(), "Abstract"+service.GetName()) + "Service.php"),
+				Name:    proto.String(getFilePath(file.GetPackage(), service.GetName()) + "ServiceTrait.php"),
 				Content: proto.String(g.String()),
 			})
 		}

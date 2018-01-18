@@ -4,8 +4,10 @@ require __DIR__.'/vendor/autoload.php';
 use Helloworld\HelloRequest;
 use Helloworld\HelloReply;
 
-class GreeterService extends Helloworld\AbstractGreeterService
+class GreeterService implements Helloworld\Greeter
 {
+    use Helloworld\GreeterServiceTrait;
+
     public function SayHello(HelloRequest $request, &$code, &$msg) : HelloReply
     {
         $name = $request->getName() ?? 'world';

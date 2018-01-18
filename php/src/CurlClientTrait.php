@@ -121,4 +121,9 @@ trait CurlClientTrait
 
         return [$status, $msg];
     }
+
+    public function getMethods()
+    {
+        return [];
+    }
 }
