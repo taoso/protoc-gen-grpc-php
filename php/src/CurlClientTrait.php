@@ -42,7 +42,14 @@ trait CurlClientTrait
         curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
             if (strpos($header_line, ':')) {
                 list($name, $value) = explode(':', $header_line);
-                $this->reply_metadata[trim($name)] = trim($value);
+                $name = trim($name);
+                $value = trim($value);
+
+                if ($this->isBinName($name)) {
+                    $value = base64_decode($value);
+                }
+
+                $this->reply_metadata[$name] = $value;
             }
 
             return strlen($header_line);
@@ -71,6 +78,10 @@ trait CurlClientTrait
         }
 
         foreach ($context->getAndClearAllMetadata() as $name => $value) {
+            if ($this->isBinName($name)) {
+                $value = base64_encode($value);
+            }
+
             $header_lines[] = "$name: $value";
         }
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);

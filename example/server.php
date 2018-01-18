@@ -1,7 +1,7 @@
 <?php
 require __DIR__.'/vendor/autoload.php';
 
-use \Lv\Grpc\Context;
+use Lv\Grpc\Context;
 use Helloworld\HelloRequest;
 use Helloworld\HelloReply;
 
@@ -11,8 +11,8 @@ class GreeterService implements Helloworld\Greeter
 
     public function SayHello(Context $context, HelloRequest $request) : HelloReply
     {
-        $a = $context->getMetadata('a');
-        $context->setMetadata('b', $a + 1);
+        $a = $context->getMetadata('a-bin');
+        $context->setMetadata('b-bin', "你好".$a);
 
         $name = $request->getName() ?? 'world';
 
