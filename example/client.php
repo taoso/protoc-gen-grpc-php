@@ -11,7 +11,7 @@ $context->setMetadata('content-type', 'application/grpc+json');
 
 // init request
 $request = new Helloworld\HelloRequest;
-$request->setName("Haitao Lv");
+$request->setName("海涛");
 
 // call service
 $reply = $service->SayHello($context, $request);
