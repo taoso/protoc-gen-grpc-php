@@ -10,15 +10,21 @@ trait UnaryGrpc
 
     private function doRequest(Session $session)
     {
-        $status = Status::OK;
         $data = substr($session->getBody(), 5);
 
         try {
-            $service = $this->getService($session->getPath());
+            $service = $this->getService($session->getUri());
 
             /** @var Message $message */
             $message = $service($session, $data);
-            if ($status === Status::OK) {
+
+            $grpc_status = $session->getStatus();
+            $grpc_message = $session->getMessage();
+            if ($grpc_message) {
+                $session->setMetadata('grpc-message', $grpc_message);
+            }
+
+            if ($grpc_status === Status::OK) {
                 $content_type = $session->getMetadata('content-type');
                 if ($content_type === 'application/grpc+json') {
                     $data = $message->serializeToJsonString();
@@ -28,7 +34,7 @@ trait UnaryGrpc
                 $session->setMetadata('content-type', $content_type);
                 $session->end(Status::OK, pack('CN', 0, strlen($data)).$data);
             } else {
-                $session->end($status);
+                $session->end($grpc_status);
             }
         } catch (GPBDecodeException $e) {
             $session->end(Status::INVALID_ARGUMENT);

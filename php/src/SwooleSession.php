@@ -18,6 +18,10 @@ class SwooleSession implements Session
      */
     private $response;
 
+    private $grpc_status = Status::OK;
+
+    private $grpc_message = '';
+
     private $is_http2 = false;
 
     public function __construct(Request $request, Response $response)
@@ -29,7 +33,7 @@ class SwooleSession implements Session
         $this->is_http2 = substr($http_version, 0, 6) === 'HTTP/2';
     }
 
-    public function getPath()
+    public function getUri()
     {
         return $this->request->server['request_uri'];
     }
@@ -60,12 +64,12 @@ class SwooleSession implements Session
 
     public function setStatus(int $status)
     {
-        $this->setMetadata('grpc-status', $status);
+        $this->grpc_status = $status;
     }
 
     public function setMessage(string $message)
     {
-        $this->setMetadata('grpc-message', $message);
+        $this->grpc_message = $message;
     }
 
     public function end($status = null, string $body = null)
@@ -81,16 +85,16 @@ class SwooleSession implements Session
 
     public function getMessage() : string
     {
-        throw new \RuntimeException('unsupport '.__METHOD__);
+        return $this->grpc_message;
     }
 
     public function getStatus() : int
     {
-        throw new \RuntimeException('unsupport '.__METHOD__);
+        return $this->grpc_status;
     }
 
     public function getAndClearAllMetadata() : array
     {
-        throw new \RuntimeException('unsupport '.__METHOD__);
+        throw new \RuntimeException(__METHOD__.' can only called in client');
     }
 }

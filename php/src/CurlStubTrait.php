@@ -3,7 +3,7 @@ namespace Lv\Grpc;
 
 use Google\Protobuf\Internal\Message;
 
-trait CurlClientTrait
+trait CurlStubTrait
 {
     use BinNameTrait;
 

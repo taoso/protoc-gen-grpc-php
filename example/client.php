@@ -1,14 +1,21 @@
 <?php
 require __DIR__.'/vendor/autoload.php';
 
-$client = new Helloworld\GreeterClient('127.0.0.1:8080');
+// init stub
+$service = new Helloworld\GreeterServiceStub('127.0.0.1:8080');
 
-$context = $client->newContext();
+// init context
+$context = $service->newContext();
 $context->setMetadata('a-bin', '海涛');
 $context->setMetadata('content-type', 'application/grpc+json');
+
+// init request
 $request = new Helloworld\HelloRequest;
 $request->setName("Haitao Lv");
 
-$reply = $client->SayHello($context, $request);
+// call service
+$reply = $service->SayHello($context, $request);
+
+// echo reply
 var_dump([$context->getStatus(), $context->getMessage(), $reply->getMessage()]);
 var_dump($context->getMetadata('b-bin'));

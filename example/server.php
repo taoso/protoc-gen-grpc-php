@@ -5,7 +5,7 @@ use Lv\Grpc\Context;
 use Helloworld\HelloRequest;
 use Helloworld\HelloReply;
 
-class GreeterService implements Helloworld\Greeter
+class GreeterService implements Helloworld\GreeterService
 {
     use Helloworld\GreeterServiceTrait;
 

@@ -12,9 +12,9 @@ class NotFoundService
         $this->empty_reply = new GPBEmpty;
     }
 
-    public function __invoke($data, &$code, &$msg)
+    public function __invoke(Context $context, $data)
     {
-        $code = Status::NOT_FOUND;
+        $context->setStatus(Status::NOT_FOUND);
         return $this->empty_reply;
     }
 }

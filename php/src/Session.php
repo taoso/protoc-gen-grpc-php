@@ -4,12 +4,12 @@ namespace Lv\Grpc;
 interface Session extends Context
 {
     /**
-     * get http request path
+     * get http request uri
      * For example, http://foo.com/bar?a=1
      *
      * return /bar
      */
-    function getPath();
+    function getUri();
 
     /**
      * get http request body
