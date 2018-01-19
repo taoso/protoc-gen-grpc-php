@@ -5,6 +5,8 @@ interface Service
 {
     /**
      * return uri method map of current service
+     *
+     * ONLY USED BY SERVER
      */
     function getMethods();
 

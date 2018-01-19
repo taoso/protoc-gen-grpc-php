@@ -114,7 +114,7 @@ trait CurlStubTrait
 
     public function getMethods()
     {
-        return [];
+        throw new \RuntimeException(__METHOD__.' can only called in server');
     }
 
     public function newContext() : Context
