@@ -1,5 +1,6 @@
 {
     "name": "lvht/grpc",
+    "license": "MIT",
     "authors": [
         {
             "name": "吕海涛",
