@@ -4,7 +4,6 @@ namespace Lv\Grpc;
 use Swoole\Http\Server;
 use Swoole\Http\Request;
 use Swoole\Http\Response;
-use Google\Protobuf\Internal\GPBDecodeException;
 
 class SwooleServer
 {

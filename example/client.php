@@ -2,7 +2,9 @@
 require __DIR__.'/vendor/autoload.php';
 
 // init stub
-$service = new Helloworld\GreeterServiceStub('127.0.0.1:8080');
+$service = new Helloworld\GreeterServiceStub('127.0.0.1:8080', [
+    // 'use_http1' => true, // set true for fpm server
+]);
 
 // init context
 $context = $service->newContext();
