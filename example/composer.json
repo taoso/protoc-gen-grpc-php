@@ -7,6 +7,11 @@
             "url": "./out"
         }
     ],
+    "autoload": {
+        "psr-4": {
+            "Lv\\Grpc\\Demo\\": "./src"
+        }
+    },
     "require": {
         "lvht/hello-sdk": "dev-master"
     }
