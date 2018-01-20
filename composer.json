@@ -15,6 +15,6 @@
     "require": {
         "php": "^7",
         "ext-curl": "*",
-        "google/protobuf": "^3.5"
+        "lvht/protobuf": "^3.5"
     }
 }
