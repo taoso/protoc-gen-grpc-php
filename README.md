@@ -4,13 +4,13 @@ grpc plugin for php.
 
 ## Installation
 
-	go get github.com/lvht/protoc-gen-grpc-php
+	composer require lvht/grpc
 
 ## Generate PHP SDK
 
 run the following command to generate php sdk for helloworld.proto
 
-	protoc --php_out=out --grpc-php_out=composer_name=grpc/hello:out ./helloworld.proto
+	protoc --php_out=out --grpc-php_out=composer_name=grpc/hello:out --plugin=protoc-gen-grpc-php=./vendor/bin/protoc-gen-grpc-php ./helloworld.proto
 
 you will get
 
