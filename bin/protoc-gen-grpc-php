@@ -2,8 +2,8 @@
 <?php
 if (is_file(__DIR__.'/../vendor/autoload.php')) {
     require __DIR__.'/../vendor/autoload.php';
-} elseif (is_file(__DIR__.'/../../vendor/autoload.php')) {
-    require __DIR__.'/../../vendor/autoload.php';
+} elseif (is_file(__DIR__.'/../../../autoload.php')) {
+    require __DIR__.'/../../../autoload.php';
 } else {
     file_put_contents('php://stderr', 'Cannot load composer autoload file\n');
     exit(2);
