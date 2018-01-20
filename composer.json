@@ -16,5 +16,8 @@
         "php": "^7",
         "ext-curl": "*",
         "lvht/protobuf": "^3.5"
-    }
+    },
+    "bin": [
+        "./bin/protoc-gen-grpc-php"
+    ]
 }

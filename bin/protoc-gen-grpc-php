@@ -1,0 +1,25 @@
+#!/usr/bin/env php
+<?php
+if (is_file(__DIR__.'/../vendor/autoload.php')) {
+    require __DIR__.'/../vendor/autoload.php';
+} elseif (is_file(__DIR__.'/../../vendor/autoload.php')) {
+    require __DIR__.'/../../vendor/autoload.php';
+} else {
+    file_put_contents('php://stderr', 'Cannot load composer autoload file\n');
+    exit(2);
+}
+
+$request = new Google\Protobuf\Internal\CodeGeneratorRequest;
+$request->mergeFromString(file_get_contents("php://stdin"));
+
+$response = new Google\Protobuf\Internal\CodeGeneratorResponse;
+
+try {
+    $generator = new Lv\Grpc\SdkGenerator($request);
+    $files = $generator->generateFiles();
+    $response->setFile($files);
+} catch (InvalidArgumentException $e) {
+    $response->setError($e->getMessage());
+}
+
+file_put_contents("php://stdout", $response->serializeToString());
