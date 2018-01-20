@@ -231,7 +231,7 @@ class SdkGenerator
 {
   "name": "$this->composer_name",
   "require": {
-    "lvht/grpc": "dev-master"
+    "lvht/grpc": "^1.0"
   },
   "autoload": {
     "psr-0": {
