@@ -310,7 +310,7 @@ EOT;
         $comments = [];
 
         $codeinfo = $file->getSourceCodeInfo();
-        $locations = $codeinfo->getLocation(); // TODO fix phpcd jump into getLocation
+        $locations = $codeinfo->getLocation();
 
         /** @var SourceCodeInfo_Location $location */
         foreach ($locations as $location) {
