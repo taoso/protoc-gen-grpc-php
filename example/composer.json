@@ -4,7 +4,7 @@
     "repositories": [
         {
             "type": "path",
-            "url": "./out"
+            "url": "./sdk"
         }
     ],
     "autoload": {

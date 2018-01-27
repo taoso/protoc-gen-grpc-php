@@ -312,7 +312,6 @@ EOT;
         $codeinfo = $file->getSourceCodeInfo();
         $locations = $codeinfo->getLocation();
 
-        /** @var SourceCodeInfo_Location $location */
         foreach ($locations as $location) {
             if (!$location->hasLeadingComments()) {
                 continue;
