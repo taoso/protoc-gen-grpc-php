@@ -19,6 +19,8 @@ class SdkGenerator
 
     private $composer_name;
 
+    private $stub_trait;
+
     /**
      * @var SourceCodeInfo_Location[]
      */
@@ -27,7 +29,7 @@ class SdkGenerator
     public function __construct(Request $request)
     {
         $this->request = $request;
-        $this->composer_name = $this->getComposerName();
+        $this->parseParameter();
     }
 
     /**
@@ -47,7 +49,10 @@ class SdkGenerator
             }
             $this->comments = [];
         }
-        $all_files[] = $this->generateComposer();
+
+        if ($this->composer_name) {
+            $all_files[] = $this->generateComposer();
+        }
 
         return $all_files;
     }
@@ -196,6 +201,9 @@ class SdkGenerator
         $p("{");
         $in();
         $p("use \\Lv\\Grpc\\CurlStubTrait;");
+        if ($this->stub_trait) {
+            $p("use {$this->stub_trait};");
+        }
         $p();
         /** @var MethodDescriptor $method */
         foreach ($service->getMethod() as $method_index => $method) {
@@ -273,26 +281,18 @@ EOT;
         }
     }
 
-    private function getComposerName()
+    private function parseParameter()
     {
-        $composer_name = null;
         $parameter_str = $this->request->getParameter();
         foreach (explode(',', $parameter_str) as $p) {
             $parts = explode('=', $p);
             if (count($parts) == 2) {
-                $name = $parts[0];
-                $value = $parts[1];
-                if (trim($name) == 'composer_name') {
-                    $composer_name = trim($value);
-                }
+                $name = trim($parts[0]);
+                $value = trim($parts[1]);
+
+                $this->$name = $value;
             }
         }
-
-        if (!$composer_name) {
-            throw new \InvalidArgumentException("invalid composer_name option");
-        }
-
-        return $composer_name;
     }
 
     private function getFilePath($namespace, $service_name, $ext = ".php")
