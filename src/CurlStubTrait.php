@@ -7,39 +7,76 @@ trait CurlStubTrait
 {
     use BinNameTrait;
 
-    private $host;
+    private $hosts;
+    private $options;
     private $curl;
     private $reply_metadata = [];
+    private $index = -1;
+    private $index_max;
 
     /**
      * create a grpc service client
      *
-     * @param $host server host, e.g. 127.0.0.1:1024
+     * @param $hosts server host list, e.g. [127.0.0.1:1024, 127.0.0.1:1025]
      * @param $options client options, include:
      *      - use_http1, indicate whether use http/1.1, default false
      *      - connect_timeout_ms, connect timout, default 10ms
      *      - timeout_ms, timout, default 30ms
+     *      - retry_num, retry count, default no retry
      */
-    public function __construct(string $host= '', array $options = [])
+    public function __construct(array $hosts = [], array $options = [])
     {
-        $this->host = $host;
-        $this->curl = curl_init();
+        $this->setHosts($hosts);
+        $this->setOptions($options);
+    }
+
+    /**
+     * should only be called before and send
+     */
+    public function setHosts(array $hosts)
+    {
+        $this->hosts = $hosts;
+        $this->index_max = count($hosts);
+    }
+
+    /**
+     * should only be called before and send
+     */
+    public function setOptions(array $options)
+    {
+        $this->options = $options;
+    }
+
+    private function getCurl()
+    {
+        $this->index++;
+        if ($this->index >= $this->index_max) {
+            $this->index = 0;
+        }
+
+        $this->host = $this->hosts[$this->index];
+
+        if (isset($this->curls[$this->index])) {
+            return $this->curls[$this->index];
+        }
+
+        $curl = curl_init();
 
         $use_http1 = empty($options['use_http1']) ? false : true;
         if (!$use_http1) {
-            curl_setopt($this->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
+            curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
         }
 
-        curl_setopt($this->curl, CURLOPT_POST, 1);
-        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($curl, CURLOPT_POST, 1);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1 );
 
         $timeout_ms = (int)($options['timeout_ms'] ?? 30);
         $connect_timeout_ms = (int)($options['connect_timeout_ms'] ?? 10);
-        curl_setopt($this->curl, CURLOPT_NOSIGNAL, 1);
-        curl_setopt($this->curl, CURLOPT_TIMEOUT_MS, $timeout_ms);
-        curl_setopt($this->curl, CURLOPT_CONNECTTIMEOUT_MS, $connect_timeout_ms);
+        curl_setopt($curl, CURLOPT_NOSIGNAL, 1);
+        curl_setopt($curl, CURLOPT_TIMEOUT_MS, $timeout_ms);
+        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT_MS, $connect_timeout_ms);
 
-        curl_setopt($this->curl, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
+        curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($curl, $header_line) {
             if (strpos($header_line, ':')) {
                 list($name, $value) = explode(':', $header_line);
                 $name = trim($name);
@@ -54,9 +91,29 @@ trait CurlStubTrait
 
             return strlen($header_line);
         });
+
+        $this->curls[$this->index] = $curl;
+
+        return $curl;
     }
 
     private function send(string $path, Context $context, Message $request, Message $reply)
+    {
+        $retry_num = (int) ($this->options['retry_num'] ?? 0);
+
+        do {
+            $this->curl = $this->getCurl();
+
+            $this->doSend($path, $context, $request, $reply);
+
+            // only retry for connect error
+            if ($this->getLastErrno() !== CURLE_COULDNT_CONNECT) {
+                return;
+            }
+        } while ($retry_num-- > 0);
+    }
+
+    private function doSend(string $path, Context $context, Message $request, Message $reply)
     {
         $this->reply_metadata = [];
 
