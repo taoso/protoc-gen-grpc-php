@@ -60,6 +60,8 @@ trait CurlStubTrait
             return $this->curls[$this->index];
         }
 
+        $options = $this->options;
+
         $curl = curl_init();
 
         $use_http1 = empty($options['use_http1']) ? false : true;
