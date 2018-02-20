@@ -8,17 +8,18 @@ trait CurlStubTrait
     use BinNameTrait;
 
     private $hosts;
-    private $options;
+    private $options = [];
     private $curl;
     private $reply_metadata = [];
     private $index = -1;
     private $index_max;
+    private $host;
 
     /**
      * create a grpc service client
      *
-     * @param $hosts server host list, e.g. [127.0.0.1:1024, 127.0.0.1:1025]
-     * @param $options client options, include:
+     * @param array $hosts server host list, e.g. [127.0.0.1:1024, 127.0.0.1:1025]
+     * @param array $options client options, include:
      *      - use_http1, indicate whether use http/1.1, default false
      *      - connect_timeout_ms, connect timout, default 10ms
      *      - timeout_ms, timout, default 30ms
@@ -66,11 +67,17 @@ trait CurlStubTrait
 
         $use_http1 = empty($options['use_http1']) ? false : true;
         if (!$use_http1) {
+            /*
+             * Option CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE was added in libcurl v7.49.0
+             * If curl extension was built with libcurl <7.49.0 and curl installed in your system is >=7.49.0
+             * you need to manualy define this constant
+             */
+            defined('CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE') or define('CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE', 5);
             curl_setopt($curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE);
         }
 
         curl_setopt($curl, CURLOPT_POST, 1);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1 );
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 
         $timeout_ms = (int)($options['timeout_ms'] ?? 30);
         $connect_timeout_ms = (int)($options['connect_timeout_ms'] ?? 10);
@@ -152,7 +159,7 @@ trait CurlStubTrait
         }
 
         if (isset($this->reply_metadata['grpc-status'])) {
-            if($this->reply_metadata['grpc-status'] == Status::OK) {
+            if ($this->reply_metadata['grpc-status'] === Status::OK) {
                 if ($context->getMetadata('content-type') === 'application/grpc+json') {
                     $reply->mergeFromJsonString(substr($data, 5));
                 } else {
@@ -171,9 +178,12 @@ trait CurlStubTrait
         }
     }
 
+    /**
+     * @throws \RuntimeException
+     */
     public function getMethods()
     {
-        throw new \RuntimeException(__METHOD__.' can only called in server');
+        throw new \RuntimeException(__METHOD__ . ' can only called in server');
     }
 
     public function newContext() : Context

@@ -216,7 +216,7 @@ class SdkGenerator
             $p("{");
             $p("    \$reply = new $output_type();");
             $p("");
-            $p("    \$this->send(\"/$package.$service_name/$method_name\", \$context, \$request, \$reply);");
+            $p("    \$this->send(\"/$package." . $service->getName() . "/$method_name\", \$context, \$request, \$reply);");
             $p("");
             $p("    return \$reply;");
             $p("}");
@@ -233,7 +233,7 @@ class SdkGenerator
         return $file;
     }
 
-    private function generateComposer()
+    private function generateComposer(): File
     {
         $content = <<<EOT
 {
