@@ -9,10 +9,12 @@
     ],
     "autoload": {
         "psr-4": {
-            "Lv\\Grpc\\Demo\\": "./src"
+            "Lv\\Grpc\\Demo\\": "src",
+            "GPBMetadata\\": "sdk/GPBMetadata",
+            "Helloworld\\": "sdk/Helloworld"
         }
     },
     "require": {
-        "lvht/hello-sdk": "dev-master"
+        "lvht/grpc": "^1.1"
     }
 }
