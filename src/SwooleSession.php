@@ -72,7 +72,7 @@ class SwooleSession implements Session
         $this->grpc_message = $message;
     }
 
-    public function end($status = null, string $body = null)
+    public function end(int $status = null, string $body = null)
     {
         if ($this->is_http2) {
             $this->response->trailer('grpc-status', $status, 0);
