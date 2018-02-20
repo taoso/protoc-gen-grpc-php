@@ -128,7 +128,7 @@ class SdkGenerator
         /** @var MethodDescriptor $method */
         foreach ($service->getMethod() as $method_index => $method) {
             $method_name = $method->getName();
-            $p("\"/$package.$service_name/$method_name\" => \"do$method_name\",");
+            $p("\"/$package." . $service->getName() . "/$method_name\" => \"do$method_name\",");
         }
         $out();
         $p("];");
