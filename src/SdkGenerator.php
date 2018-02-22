@@ -162,10 +162,10 @@ class SdkGenerator
             $in();
             $p("\$request = new $input_type;");
             $p();
-            $p("if (\$context->getMetadata('content-type') === 'application/grpc+json') {");
-            $p("    \$request->mergeFromJsonString(\$data);");
-            $p("} else {");
+            $p("if (\$context->getMetadata('content-type') === 'application/grpc+proto') {");
             $p("    \$request->mergeFromString(\$data);");
+            $p("} else {");
+            $p("    \$request->mergeFromJsonString(\$data);");
             $p("}");
             $p();
             $p("return \$this->$method_name(\$context, \$request);");

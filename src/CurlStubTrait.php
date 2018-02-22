@@ -129,12 +129,22 @@ trait CurlStubTrait
         $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
 
-        if ($context->getMetadata('content-type') === 'application/grpc+json') {
-            $data = $request->serializeToJsonString();
-        } else {
-            $data = $request->serializeToString();
+        $content_type = $context->getMetadata('content-type');
+
+        if (!$content_type) {
+            $content_type = 'application/grpc+proto';
         }
-        $data = pack('CN', 0, strlen($data)).$data;
+
+        if ($content_type === 'application/grpc+proto') {
+            $data = $request->serializeToString();
+        } else {
+            $data = $request->serializeToJsonString();
+        }
+
+        if ($content_type !== 'application/json') {
+            $data = pack('CN', 0, strlen($data)).$data;
+        }
+
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
 
         $header_lines = [];

@@ -4,13 +4,15 @@ gRPC plugin and sdk for php.
 
 ## Installation
 
-	composer require lvht/grpc
+    composer require lvht/grpc
 
 ## Generate PHP SDK
 
 run the following command to generate php sdk for helloworld.proto
 
-	protoc --php_out=out --grpc-php_out=composer_name=grpc/hello:out --plugin=protoc-gen-grpc-php=./vendor/bin/protoc-gen-grpc-php ./helloworld.proto
+    protoc --php_out=out --grpc-php_out=composer_name=grpc/hello:out \
+        --plugin=protoc-gen-grpc-php=./vendor/bin/protoc-gen-grpc-php \
+        ./helloworld.proto
 
 you will get
 
@@ -38,3 +40,15 @@ Please see the `example/client.php` and `example/server.php` for more detail.
 protoc-gen-grpc-php offer some arguments.
 
 * composer_name set the generated code's package name
+
+## Simple gRPC
+
+Besides the standard gRPC, the generated code has two additional features.
+
+### gRPC over http/1.1
+
+Set the `use_http1` flag to `true` when you create a stub instance will let stub use http1.1 to transfer rpc data. Both `grpc-status` and `grpc-message` will be transfered as a normal http header instead of **Trailers**.
+
+### simple gRPC or sRPC
+
+Set the `Content-Type` to `application/json` will let stub use a more simple mode to transfer rpc data. In the simple mode, only json is supported, and the message prefix must not be transfered.

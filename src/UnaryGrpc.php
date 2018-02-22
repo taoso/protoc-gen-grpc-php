@@ -2,6 +2,7 @@
 namespace Lv\Grpc;
 
 use Google\Protobuf\Internal\Message;
+use Google\Protobuf\Internal\GPBDecodeException;
 
 trait UnaryGrpc
 {
@@ -10,7 +11,27 @@ trait UnaryGrpc
 
     private function doRequest(Session $session)
     {
-        $data = substr($session->getBody(), 5);
+        $data = $session->getBody();
+        $content_type = $session->getMetadata('content-type');
+
+        $is_grpc = substr($content_type, 0, 17) === 'application/grpc+';
+
+        if ($is_grpc) {
+            $options = unpack('Cflag/Nlength', substr($data, 0, 5));
+
+            if ($options['flag']) {
+                // TODO support compress
+                return $session->end(Status::UNIMPLEMENTED);
+            }
+
+            if ($options['length'] + 5 !== strlen($data)) {
+                return $session->end(Status::INVALID_ARGUMENT);
+            }
+
+            $data = substr($data, 5);
+        } elseif ($content_type !== 'application/json') {
+            return $session->end(Status::INVALID_ARGUMENT);
+        }
 
         try {
             $service = $this->getService($session->getUri());
@@ -25,14 +46,17 @@ trait UnaryGrpc
             }
 
             if ($grpc_status === Status::OK) {
-                $content_type = $session->getMetadata('content-type');
-                if ($content_type === 'application/grpc+json') {
-                    $data = $message->serializeToJsonString();
-                } else {
+                if ($content_type === 'application/grpc+proto') {
                     $data = $message->serializeToString();
+                } else {
+                    $data = $message->serializeToJsonString();
+                }
+
+                if ($is_grpc) {
+                    $data = pack('CN', 0, strlen($data)).$data;
                 }
                 $session->setMetadata('content-type', $content_type);
-                $session->end(Status::OK, pack('CN', 0, strlen($data)).$data);
+                $session->end(Status::OK, $data);
             } else {
                 $session->end($grpc_status);
             }
