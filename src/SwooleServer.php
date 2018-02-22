@@ -29,7 +29,6 @@ class SwooleServer
     public function onRequest(Request $request, Response $response)
     {
         $session = new SwooleSession($request, $response);
-        $session->setMetadata('lv-bin', '海涛');
         $this->doRequest($session);
     }
 
