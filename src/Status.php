@@ -138,4 +138,9 @@ class Status
         self::DATA_LOSS           => "Data Loss",
         self::UNAUTHENTICATED     => "Unauthenticated",
     ];
+
+    public static function getStatusMessage(int $status) : string
+    {
+        return Status::STATUS_TO_MSG[$status] ?? Status::UNKNOWN;
+    }
 }
