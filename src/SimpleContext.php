@@ -1,11 +1,12 @@
 <?php
 namespace Lv\Grpc;
 
-class CurlContext implements Context
+class SimpleContext implements Context
 {
     private $status;
     private $message;
     private $metadata = [];
+    private $metadata_lower = [];
 
     public function setStatus(int $status)
     {
@@ -29,19 +30,19 @@ class CurlContext implements Context
 
     public function getMetadata(string $name)
     {
-        return $this->metadata[$name] ?? null;
+        $name = strtolower(trim($name));
+        return $this->metadata_lower[$name] ?? null;
     }
 
     public function setMetadata(string $name, string $value)
     {
+        $name = trim($name);
         $this->metadata[$name] = $value;
+        $this->metadata_lower[strtolower($name)] = $value;
     }
 
-    public function getAndClearAllMetadata() : array
+    public function getAllMetadata() : array
     {
-        $metadata = $this->metadata;
-        $this->metadata = [];
-
-        return $metadata;
+        return $this->metadata;
     }
 }

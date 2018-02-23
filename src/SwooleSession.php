@@ -45,6 +45,7 @@ class SwooleSession implements Session
 
     public function getMetadata(string $name)
     {
+        $name = strtolower(trim($name));
         $value = $this->request->header[$name] ?? null;
         if ($this->isBinName($name) && $value) {
             $value = base64_decode($value);
@@ -93,8 +94,8 @@ class SwooleSession implements Session
         return $this->grpc_status;
     }
 
-    public function getAndClearAllMetadata() : array
+    public function getAllMetadata() : array
     {
-        throw new \RuntimeException(__METHOD__.' can only called in client');
+        return $this->request->header;
     }
 }
