@@ -11,13 +11,6 @@ interface Service
     function getMethods();
 
     /**
-     * generate new context.
-     *
-     * ONLY USED BY CLIENT
-     */
-    function newContext() : Context;
-
-    /**
      * get request error code.
      *
      * ONLY USED BY CLIENT

@@ -1,8 +1,6 @@
 <?php
 namespace Lv\Grpc;
 
-use Google\Protobuf\Internal\Message;
-
 trait CurlStubTrait
 {
     use BinNameTrait;
@@ -106,14 +104,14 @@ trait CurlStubTrait
         return $curl;
     }
 
-    private function send(string $path, Context $context, Message $request, Message $reply)
+    private function send(string $path, Message $request, Message $reply)
     {
         $retry_num = (int) ($this->options['retry_num'] ?? 0);
 
         do {
             $this->curl = $this->getCurl();
 
-            $this->doSend($path, $context, $request, $reply);
+            $this->doSend($path, $request, $reply);
 
             // only retry for connect error
             if ($this->getLastErrno() !== CURLE_COULDNT_CONNECT) {
@@ -122,14 +120,15 @@ trait CurlStubTrait
         } while ($retry_num-- > 0);
     }
 
-    private function doSend(string $path, Context $context, Message $request, Message $reply)
+    private function doSend(string $path, Message $request, Message $reply)
     {
         $this->reply_metadata = [];
 
         $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
+        $request_context = $request->context();
 
-        $content_type = $context->getMetadata('content-type');
+        $content_type = $request_context->getMetadata('content-type');
 
         if (!$content_type) {
             $content_type = 'application/grpc+proto';
@@ -149,11 +148,11 @@ trait CurlStubTrait
 
         $header_lines = [];
 
-        if (!$context->getMetadata('content-type')) {
+        if (!$request_context->getMetadata('content-type')) {
             $header_lines[] = 'Content-Type: application/grpc+proto';
         }
 
-        foreach ($context->getAndClearAllMetadata() as $name => $value) {
+        foreach ($request_context->getAllMetadata() as $name => $value) {
             if ($this->isBinName($name)) {
                 $value = base64_encode($value);
             }
@@ -164,27 +163,39 @@ trait CurlStubTrait
 
         $data = curl_exec($this->curl);
 
+        $reply_context = $reply->context();
         foreach ($this->reply_metadata as $name => $value) {
-            $context->setMetadata($name, $value);
+            $reply_context->setMetadata($name, $value);
         }
 
-        if (isset($this->reply_metadata['grpc-status'])) {
-            if ($this->reply_metadata['grpc-status'] === Status::OK) {
-                if ($context->getMetadata('content-type') === 'application/grpc+json') {
+        $grpc_status = (int) $reply_context->getMetadata('grpc-status');
+        if ($grpc_status !== null) {
+            if ($grpc_status === Status::OK) {
+                switch ($reply_context->getMetadata('content-type')) {
+                case 'application/grpc+json':
+                    // TODO support compression
                     $reply->mergeFromJsonString(substr($data, 5));
-                } else {
+                    break;
+                case 'application/grpc+proto':
+                    // TODO support compression
                     $reply->mergeFromString(substr($data, 5));
+                    break;
+                case 'application/json':
+                    $reply->mergeFromJsonString($data);
+                    break;
                 }
             }
 
-            $status = (int) $this->reply_metadata['grpc-status'];
-            $message = $this->reply_metadata['grpc-message']
-                ?? Status::STATUS_TO_MSG[$status] ?? Status::UNKNOWN;
+            $status = (int) $reply_context->getMetadata('grpc-status');
+            $message = $reply_context->getMetadata('grpc-message');
+            if (!$message) {
+                $message = Status::getStatusMessage($status);
+            }
 
-            $context->setStatus($status);
-            $context->setMessage($message);
+            $reply_context->setStatus($status);
+            $reply_context->setMessage($message);
         } else {
-            $context->setStatus(Status::INTERNAL);
+            $reply_context->setStatus(Status::INTERNAL);
         }
     }
 
@@ -194,11 +205,6 @@ trait CurlStubTrait
     public function getMethods()
     {
         throw new \RuntimeException(__METHOD__ . ' can only called in server');
-    }
-
-    public function newContext() : Context
-    {
-        return new CurlContext;
     }
 
     public function getLastErrno()
