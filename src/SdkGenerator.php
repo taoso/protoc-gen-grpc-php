@@ -90,7 +90,7 @@ class SdkGenerator
             $output_type = $this->packageToNamespace($method->getOutputType());
 
             $this->generateComment("6,$service_index,2,$method_index");
-            $p("function $method_name(\\Lv\Grpc\\Context \$context, $input_type \$request) : $output_type;");
+            $p("function $method_name($input_type \$request) : $output_type;");
         }
         $out();
         $p("}");
@@ -135,11 +135,6 @@ class SdkGenerator
         $out();
         $p("}");
         $p();
-        $p("final public function newContext() : \\Lv\\Grpc\\Context");
-        $p("{");
-        $p("    throw new \\RuntimeException(__METHOD__.' can only called in client');");
-        $p("}");
-        $p();
         $p("final public function getLastErrno()");
         $p("{");
         $p("    throw new \\RuntimeException(__METHOD__.' can only called in client');");
@@ -157,18 +152,20 @@ class SdkGenerator
             $output_type = $this->packageToNamespace($method->getOutputType());
 
             $this->generateComment("6,$service_index,2,$method_index");
-            $p("final public function do$method_name(\\Lv\\Grpc\\Context \$context, \$data)");
+            $p("final public function do$method_name(\\Lv\\Grpc\\Session \$session, \$data)");
             $p("{");
             $in();
             $p("\$request = new $input_type;");
             $p();
-            $p("if (\$context->getMetadata('content-type') === 'application/grpc+proto') {");
+            $p("if (\$session->getMetadata('content-type') === 'application/grpc+proto') {");
             $p("    \$request->mergeFromString(\$data);");
             $p("} else {");
             $p("    \$request->mergeFromJsonString(\$data);");
             $p("}");
             $p();
-            $p("return \$this->$method_name(\$context, \$request);");
+            $p("\$request->context(\$session);");
+            $p();
+            $p("return \$this->$method_name(\$request);");
             $out();
             $p("}");
         }
@@ -212,11 +209,11 @@ class SdkGenerator
             $output_type = $this->packageToNamespace($method->getOutputType());
 
             $this->generateComment("6,$service_index,2,$method_index");
-            $p("public function $method_name(\\Lv\\Grpc\\Context \$context, $input_type \$request) : $output_type");
+            $p("public function $method_name($input_type \$request) : $output_type");
             $p("{");
             $p("    \$reply = new $output_type();");
             $p("");
-            $p("    \$this->send(\"/$package." . $service->getName() . "/$method_name\", \$context, \$request, \$reply);");
+            $p("    \$this->send(\"/$package." . $service->getName() . "/$method_name\", \$request, \$reply);");
             $p("");
             $p("    return \$reply;");
             $p("}");
