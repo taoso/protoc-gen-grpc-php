@@ -76,7 +76,7 @@ class FpmSession implements Session
         return $this->grpc_status;
     }
 
-    public function getAndClearAllMetadata() : array
+    public function getAllMetadata() : array
     {
         throw new \RuntimeException(__METHOD__.' can only called in client');
     }

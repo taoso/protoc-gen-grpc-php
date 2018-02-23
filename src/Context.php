@@ -24,8 +24,10 @@ interface Context
     function getMessage() : string;
 
     /**
-     * get grpc metadata. if the name has '-bin', the value
+     * Get grpc metadata. if the name has '-bin', the value
      * will be base64_decoded.
+     *
+     * The $name MUST be case-insensitive.
      *
      * @return string|null
      */
@@ -39,8 +41,6 @@ interface Context
 
     /**
      * get and clear all grpc metadata
-     *
-     * FOR CLIENT ONLY!
      */
-    function getAndClearAllMetadata() : array;
+    function getAllMetadata() : array;
 }
