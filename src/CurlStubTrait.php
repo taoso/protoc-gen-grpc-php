@@ -3,8 +3,6 @@ namespace Lv\Grpc;
 
 trait CurlStubTrait
 {
-    use BinNameTrait;
-
     private $hosts;
     private $options = [];
     private $curl;
@@ -89,10 +87,6 @@ trait CurlStubTrait
                 $name = trim($name);
                 $value = trim($value);
 
-                if ($this->isBinName($name)) {
-                    $value = base64_decode($value);
-                }
-
                 $this->reply_metadata[$name] = $value;
             }
 
@@ -122,16 +116,18 @@ trait CurlStubTrait
 
     private function doSend(string $path, Message $request, Message $reply)
     {
-        $this->reply_metadata = [];
-
         $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
+
         $request_context = $request->context();
 
         $content_type = $request_context->getMetadata('content-type');
 
+        $header_lines = [];
+
         if (!$content_type) {
             $content_type = 'application/grpc+proto';
+            $header_lines[] = "Content-Type: $content_type";
         }
 
         if ($content_type === 'application/grpc+proto') {
@@ -146,31 +142,20 @@ trait CurlStubTrait
 
         curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
 
-        $header_lines = [];
-
-        if (!$request_context->getMetadata('content-type')) {
-            $header_lines[] = 'Content-Type: application/grpc+proto';
-        }
-
         foreach ($request_context->getAllMetadata() as $name => $value) {
-            if ($this->isBinName($name)) {
-                $value = base64_encode($value);
-            }
-
             $header_lines[] = "$name: $value";
         }
+
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);
 
         $data = curl_exec($this->curl);
 
-        $reply_context = $reply->context();
-        foreach ($this->reply_metadata as $name => $value) {
-            $reply_context->setMetadata($name, $value);
-        }
+        $reply_context = new SimpleContext($this->reply_metadata);
+        $reply->context($reply_context);
 
-        $grpc_status = (int) $reply_context->getMetadata('grpc-status');
-        if ($grpc_status !== null) {
-            if ($grpc_status === Status::OK) {
+        if (isset($this->reply_metadata['grpc-status'])) {
+            $status = (int) $reply_context->getMetadata('grpc-status');
+            if ($status === Status::OK) {
                 switch ($reply_context->getMetadata('content-type')) {
                 case 'application/grpc+json':
                     // TODO support compression
@@ -183,10 +168,11 @@ trait CurlStubTrait
                 case 'application/json':
                     $reply->mergeFromJsonString($data);
                     break;
+                default:
+                    $status = Status::UNKNOWN;
                 }
             }
 
-            $status = (int) $reply_context->getMetadata('grpc-status');
             $message = $reply_context->getMetadata('grpc-message');
             if (!$message) {
                 $message = Status::getStatusMessage($status);
@@ -195,8 +181,11 @@ trait CurlStubTrait
             $reply_context->setStatus($status);
             $reply_context->setMessage($message);
         } else {
-            $reply_context->setStatus(Status::INTERNAL);
+            $reply_context->setStatus(Status::UNKNOWN);
+            $reply_context->setMessage(Status::getStatusMessage(Status::UNKNOWN));
         }
+
+        $this->reply_metadata = [];
     }
 
     /**

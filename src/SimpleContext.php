@@ -3,10 +3,23 @@ namespace Lv\Grpc;
 
 class SimpleContext implements Context
 {
+    use BinNameTrait;
+
     private $status;
     private $message;
     private $metadata = [];
     private $metadata_lower = [];
+
+    public function __construct(array $raw_metadata = [])
+    {
+        if ($raw_metadata) {
+            $this->metadata = $raw_metadata;
+
+            foreach ($raw_metadata as $name => $value) {
+                $this->metadata_lower[strtolower($name)] = $value;
+            }
+        }
+    }
 
     public function setStatus(int $status)
     {
@@ -30,13 +43,21 @@ class SimpleContext implements Context
 
     public function getMetadata(string $name)
     {
-        $name = strtolower(trim($name));
-        return $this->metadata_lower[$name] ?? null;
+        $name = strtolower($name);
+        $value = $this->metadata_lower[$name] ?? null;
+        if ($value && $this->isBinName($name)) {
+            $value = base64_decode($value);
+        }
+
+        return $value;
     }
 
     public function setMetadata(string $name, string $value)
     {
-        $name = trim($name);
+        if ($this->isBinName($name)) {
+            $value = base64_encode($value);
+        }
+
         $this->metadata[$name] = $value;
         $this->metadata_lower[strtolower($name)] = $value;
     }

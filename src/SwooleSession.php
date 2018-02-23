@@ -45,9 +45,9 @@ class SwooleSession implements Session
 
     public function getMetadata(string $name)
     {
-        $name = strtolower(trim($name));
+        $name = strtolower($name);
         $value = $this->request->header[$name] ?? null;
-        if ($this->isBinName($name) && $value) {
+        if ($value && $this->isBinName($name)) {
             $value = base64_decode($value);
         }
 

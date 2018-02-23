@@ -40,7 +40,7 @@ interface Context
     function setMetadata(string $name, string $value);
 
     /**
-     * get and clear all grpc metadata
+     * Get all grpc raw metadata. The '-bin' value will not be decoded.
      */
     function getAllMetadata() : array;
 }
