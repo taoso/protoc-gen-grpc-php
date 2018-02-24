@@ -51,4 +51,34 @@ Set the `use_http1` flag to `true` when you create a stub instance will let stub
 
 ### simple gRPC or sRPC
 
-Set the `Content-Type` to `application/json` will let stub use a more simple mode to transfer rpc data. In the simple mode, only json is supported, and the message prefix must not be transfered.
+Set the `Content-Type` to `application/json` will let stub use a more simple mode to transfer rpc data. In the simple mode, only json is supported, and the message prefix must not be transfered. Both http/1 and http/2 are supported.
+
+```
+POST /helloworld.Greeter/SayHello HTTP/1.1
+Accept: application/json, */*
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+Content-Length: 24
+Content-Type: application/json
+Host: localhost:8080
+User-Agent: HTTPie/0.9.9
+foo: bar
+
+{
+    "name": "海涛"
+}
+
+HTTP/1.1 200 OK
+Connection: keep-alive
+Content-Length: 26
+Date: Sat, 24 Feb 2018 08:09:20 GMT
+Server: swoole-http-server
+b-bin: 5L2g5aW9
+content-type: application/json
+grpc-status: 0
+
+{
+    "message": "Hello 海涛"
+}
+
+```
