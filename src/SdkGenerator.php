@@ -21,6 +21,8 @@ class SdkGenerator
 
     private $stub_trait;
 
+    private $stub_trait_only;
+
     /**
      * @var SourceCodeInfo_Location[]
      */
@@ -197,10 +199,16 @@ class SdkGenerator
         $p("final class {$service_name}Stub implements $service_name");
         $p("{");
         $in();
-        $p("use \\Lv\\Grpc\\CurlStubTrait;");
-        if ($this->stub_trait) {
-            $p("use {$this->stub_trait};");
+
+        if ($this->stub_trait_only) {
+            $p("use {$this->stub_trait_only};");
+        } else {
+            $p("use \\Lv\\Grpc\\CurlStubTrait;");
+            if ($this->stub_trait) {
+                $p("use {$this->stub_trait};");
+            }
         }
+
         $p();
         /** @var MethodDescriptor $method */
         foreach ($service->getMethod() as $method_index => $method) {

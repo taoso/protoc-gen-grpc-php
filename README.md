@@ -40,6 +40,8 @@ Please see the `example/client.php` and `example/server.php` for more detail.
 protoc-gen-grpc-php offer some arguments.
 
 * composer_name set the generated code's package name
+* stub_trait add additional trait to the generated stub
+* stub_trait_only replace the default trait of the generated stub
 
 ## Simple gRPC
 
