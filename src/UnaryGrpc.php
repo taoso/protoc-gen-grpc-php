@@ -55,7 +55,7 @@ trait UnaryGrpc
                 if ($is_grpc) {
                     $data = pack('CN', 0, strlen($data)).$data;
                 }
-                $session->setMetadata('content-type', $content_type);
+                $session->setMetadata('Content-Type', $content_type);
                 $session->end(Status::OK, $data);
             } else {
                 $session->end($grpc_status);
