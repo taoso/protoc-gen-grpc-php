@@ -56,10 +56,6 @@ trait CurlStubTrait
 
         $this->host = $this->hosts[$this->index];
 
-        if (isset($this->curls[$this->index])) {
-            return $this->curls[$this->index];
-        }
-
         $options = $this->options;
 
         $curl = curl_init();
@@ -96,8 +92,6 @@ trait CurlStubTrait
             return strlen($header_line);
         });
 
-        $this->curls[$this->index] = $curl;
-
         return $curl;
     }
 
@@ -106,8 +100,6 @@ trait CurlStubTrait
         $retry_num = (int) ($this->options['retry_num'] ?? 0);
 
         do {
-            $this->curl = $this->getCurl();
-
             $this->doSend($path, $request, $reply);
 
             // only retry for connect error
@@ -122,8 +114,9 @@ trait CurlStubTrait
         $this->last_errno = 0;
         $this->last_error = '';
 
+        $curl = $this->getCurl();
         $url = $this->host.$path;
-        curl_setopt($this->curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_URL, $url);
 
         $request_context = $request->context();
 
@@ -146,22 +139,22 @@ trait CurlStubTrait
             $data = pack('CN', 0, strlen($data)).$data;
         }
 
-        curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
 
         foreach ($request_context->getAllMetadata() as $name => $value) {
             $header_lines[] = "$name: $value";
         }
 
-        curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, $header_lines);
 
-        $data = curl_exec($this->curl);
+        $data = curl_exec($curl);
 
         if ($data === false) {
-            $this->last_errno = curl_errno($this->curl);
-            $this->last_error = curl_error($this->curl);
+            $this->last_errno = curl_errno($curl);
+            $this->last_error = curl_error($curl);
         }
 
-        curl_close($this->curl);
+        curl_close($curl);
 
         $reply_context = new SimpleContext($this->reply_metadata);
         $reply->context($reply_context);
