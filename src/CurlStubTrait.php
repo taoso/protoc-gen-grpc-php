@@ -11,6 +11,9 @@ trait CurlStubTrait
     private $index_max;
     private $host;
 
+    private $last_errno;
+    private $last_error;
+
     /**
      * create a grpc service client
      *
@@ -116,6 +119,9 @@ trait CurlStubTrait
 
     private function doSend(string $path, Message $request, Message $reply)
     {
+        $this->last_errno = 0;
+        $this->last_error = '';
+
         $url = $this->host.$path;
         curl_setopt($this->curl, CURLOPT_URL, $url);
 
@@ -149,6 +155,13 @@ trait CurlStubTrait
         curl_setopt($this->curl, CURLOPT_HTTPHEADER, $header_lines);
 
         $data = curl_exec($this->curl);
+
+        if ($data === false) {
+            $this->last_errno = curl_errno($this->curl);
+            $this->last_error = curl_error($this->curl);
+        }
+
+        curl_close($this->curl);
 
         $reply_context = new SimpleContext($this->reply_metadata);
         $reply->context($reply_context);
@@ -198,11 +211,11 @@ trait CurlStubTrait
 
     public function getLastErrno()
     {
-        return curl_errno($this->curl);
+        return $this->last_errno;
     }
 
     public function getLastError()
     {
-        return curl_error($this->curl);
+        return $this->last_error;
     }
 }
