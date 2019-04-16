@@ -145,6 +145,8 @@ trait CurlStubTrait
             $header_lines[] = "$name: $value";
         }
 
+        $header_lines[] = "te: trailers";
+
         curl_setopt($curl, CURLOPT_HTTPHEADER, $header_lines);
 
         $data = curl_exec($curl);
